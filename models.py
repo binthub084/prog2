@@ -54,7 +54,6 @@ def test(model, dataloader, loss_fn):
         with torch.no_grad():  
             logits_batch = model(image_batch)  
 
-        
             loss = loss_fn(logits_batch, label_batch)
             loss_total += loss.item()  
 
