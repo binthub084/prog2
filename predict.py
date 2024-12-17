@@ -1,43 +1,57 @@
+"""学習されていないネットワークを使って予測をする"""
 import matplotlib.pyplot as plt
 
 import torch
 from torchvision import datasets
-import torchvision.transform.v2 as transforms
+import torchvision.transforms.v2 as transforms
 
 import models
 
-#モデルをインスタンス化する
-model = models.MYModel()
+
+# モデルを作る
+model = models.MyModel()
 print(model)
 
-#データセットのロード
 ds_train = datasets.FashionMNIST(
     root='data',
     train=True,
     download=True,
-    transform=transform.Compose([
+    transform=transforms.Compose([
         transforms.ToImage(),
-        transforms.ToDtype(torch.floaat32, scale=True)])
+        transforms.ToDtype(torch.float32, scale=True)
+    ])
 )
 
-#imageはPILではなくTensorに変換済み
-image, target = ds_train[0]
-#(1, H, W)　から　(1, 1, H, W)　に次元を上げる
-image = image.unspueeze(dim=0)
+# image は [0, 1] に正規化された Tensor (1, 28, 28)
+image, target = ds_train[120]
+# (1, 28, 28) -> (1, 1, 28, 28)
+image = image.unsqueeze(dim=0)
 
-#モデルに入れて結果（logits)を出す
+# モデルに入力画像を入れる
 model.eval()
 with torch.no_grad():
     logits = model(image)
 
 print(logits)
 
-#ロジットをグラフにする
-plt.ber(range(len(logits[0])), logits[0])
-plt.show()
+# ロジットのグラフ
+# plt.bar(range(10), logits[0])
+# plt.show()
 
-#クラス確率をグラフにする
+# クラス確率をグラフ
 probs = logits.softmax(dim=1)
-plt.ber(range(len(probs[0])), probs[0])
-plt.ylim(0,1)
+# plt.bar(range(len(probs[0])), probs[0])
+# plt.ylim(0, 1)
+# plt.show()
+
+plt.figure(figsize=(8, 4))
+plt.subplot(1, 2, 1)
+plt.imshow(image[0, 0], cmap='gray_r')
+plt.title(f'class: {target} ({datasets.FashionMNIST.classes[target]})')
+
+plt.subplot(1, 2, 2)
+plt.bar(range(len(probs[0])), probs[0])
+plt.ylim(0, 1)
+plt.title(f'predicted class: {probs[0].argmax()}')
+
 plt.show()
